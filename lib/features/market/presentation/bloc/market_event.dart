@@ -14,3 +14,11 @@ class FetchCoinsEvent extends MarketEvent {
 class RefreshCoinsEvent extends MarketEvent {
   const RefreshCoinsEvent();
 }
+class SearchCoinsEvent extends MarketEvent {
+  final String query;
+
+  const SearchCoinsEvent(this.query);
+
+  @override
+  List<Object?> get props => [query];
+}

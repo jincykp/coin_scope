@@ -1,3 +1,4 @@
+
 import 'package:equatable/equatable.dart';
 
 import '../../domain/entities/coin.dart';
@@ -19,11 +20,15 @@ class MarketLoading extends MarketState {
 
 class MarketLoaded extends MarketState {
   final List<Coin> coins;
+  final String searchQuery;
 
-  const MarketLoaded(this.coins);
+  const MarketLoaded(
+    this.coins, {
+    this.searchQuery = '',
+  });
 
   @override
-  List<Object?> get props => [coins];
+  List<Object?> get props => [coins, searchQuery];
 }
 
 class MarketError extends MarketState {

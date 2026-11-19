@@ -1,3 +1,4 @@
+import 'package:coin_scope/core/constants/api_constants.dart';
 import 'package:coin_scope/features/market/data/model/coin_model.dart';
 import 'package:dio/dio.dart';
 
@@ -11,7 +12,7 @@ class CoinRemoteDataSource {
   Future<List<CoinModel>> getCoins() async {
     try {
       final response = await dio.get(
-        '/coins/markets',
+ApiEndpoints.coins,
         queryParameters: {
           'vs_currency': 'usd',
           'order': 'market_cap_desc',
