@@ -1,3 +1,4 @@
+import 'package:coin_scope/core/constants/api_key.dart';
 import 'package:dio/dio.dart';
 
 class DioClient {
@@ -9,7 +10,7 @@ class DioClient {
             baseUrl: 'https://api.coingecko.com/api/v3',
             connectTimeout: const Duration(seconds: 15),
             receiveTimeout: const Duration(seconds: 15),
-            headers: {'x-cg-demo-api-key': 'CG-iVhXiTxn5dyzZCtkWpCSQuHx'},
+            headers: {'x-cg-demo-api-key': ApiKey.coinGecko},
           ),
         )
         ..interceptors.add(
