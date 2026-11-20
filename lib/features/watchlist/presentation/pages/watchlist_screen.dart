@@ -1,7 +1,7 @@
-
 import 'package:coin_scope/features/watchlist/presentation/bloc/watch_list_bloc.dart';
 import 'package:coin_scope/features/watchlist/presentation/bloc/watch_list_event.dart';
 import 'package:coin_scope/features/watchlist/presentation/bloc/watch_list_state.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
@@ -31,9 +31,7 @@ class _WatchlistScreenState extends State<WatchlistScreen> {
 
   void _loadCoins() {
     final getCoins = GetCoins(
-      repository: CoinRepositoryImpl(
-        remoteDataSource: CoinRemoteDataSource(),
-      ),
+      repository: CoinRepositoryImpl(remoteDataSource: CoinRemoteDataSource()),
     );
 
     _coinsFuture = getCoins();
@@ -55,6 +53,23 @@ class _WatchlistScreenState extends State<WatchlistScreen> {
     ).format(price);
   }
 
+  String _getErrorMessage(Object error) {
+    if (error is DioException) {
+      switch (error.type) {
+        case DioExceptionType.connectionError:
+        case DioExceptionType.connectionTimeout:
+        case DioExceptionType.receiveTimeout:
+        case DioExceptionType.sendTimeout:
+          return 'Please check your internet connection and try again.';
+
+        default:
+          return 'Unable to load watchlist coins. Please try again.';
+      }
+    }
+
+    return 'Unable to load watchlist coins. Please try again.';
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -63,20 +78,14 @@ class _WatchlistScreenState extends State<WatchlistScreen> {
         title: const Text('My Watchlist'),
         backgroundColor: AppColors.background,
         actions: [
-          IconButton(
-            onPressed: _refreshCoins,
-            icon: const Icon(Icons.refresh),
-          ),
+          IconButton(onPressed: _refreshCoins, icon: const Icon(Icons.refresh)),
         ],
       ),
       body: BlocBuilder<WatchlistBloc, WatchlistState>(
         builder: (context, state) {
-          if (state is WatchlistInitial ||
-              state is WatchlistLoading) {
+          if (state is WatchlistInitial || state is WatchlistLoading) {
             return const Center(
-              child: CircularProgressIndicator(
-                color: AppColors.primary,
-              ),
+              child: CircularProgressIndicator(color: AppColors.primary),
             );
           }
 
@@ -84,9 +93,7 @@ class _WatchlistScreenState extends State<WatchlistScreen> {
             return Center(
               child: Text(
                 state.message,
-                style: const TextStyle(
-                  color: AppColors.error,
-                ),
+                style: const TextStyle(color: AppColors.error),
               ),
             );
           }
@@ -96,9 +103,7 @@ class _WatchlistScreenState extends State<WatchlistScreen> {
               return const Center(
                 child: Text(
                   'Your watchlist is empty',
-                  style: TextStyle(
-                    color: AppColors.textSecondary,
-                  ),
+                  style: TextStyle(color: AppColors.textSecondary),
                 ),
               );
             }
@@ -106,21 +111,41 @@ class _WatchlistScreenState extends State<WatchlistScreen> {
             return FutureBuilder<List<Coin>>(
               future: _coinsFuture,
               builder: (context, snapshot) {
-                if (snapshot.connectionState ==
-                    ConnectionState.waiting) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(
-                    child: CircularProgressIndicator(
-                      color: AppColors.primary,
-                    ),
+                    child: CircularProgressIndicator(color: AppColors.primary),
                   );
                 }
 
                 if (snapshot.hasError) {
                   return Center(
-                    child: Text(
-                      'Failed to load coins: ${snapshot.error}',
-                      style: const TextStyle(
-                        color: AppColors.error,
+                    child: Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          const Icon(
+                            Icons.info_outline,
+                            color: AppColors.error,
+                            size: 48,
+                          ),
+                          const SizedBox(height: 12),
+                        
+                          Text(
+                            _getErrorMessage(snapshot.error!),
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              color: AppColors.textSecondary,
+                              fontSize: 12,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          ElevatedButton(
+                            onPressed: _refreshCoins,
+                            child: const Text('Try Again'),
+                          ),
+                        ],
                       ),
                     ),
                   );
@@ -129,9 +154,7 @@ class _WatchlistScreenState extends State<WatchlistScreen> {
                 final allCoins = snapshot.data ?? [];
 
                 final favoriteCoins = allCoins
-                    .where(
-                      (coin) => state.favoriteIds.contains(coin.id),
-                    )
+                    .where((coin) => state.favoriteIds.contains(coin.id))
                     .toList();
 
                 if (favoriteCoins.isEmpty) {
@@ -139,9 +162,7 @@ class _WatchlistScreenState extends State<WatchlistScreen> {
                     child: Text(
                       'No saved coins found in the market data.',
                       textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: AppColors.textSecondary,
-                      ),
+                      style: TextStyle(color: AppColors.textSecondary),
                     ),
                   );
                 }
@@ -152,8 +173,7 @@ class _WatchlistScreenState extends State<WatchlistScreen> {
                     padding: const EdgeInsets.all(16),
                     physics: const AlwaysScrollableScrollPhysics(),
                     itemCount: favoriteCoins.length,
-                    separatorBuilder: (_, __) =>
-                        const SizedBox(height: 12),
+                    separatorBuilder: (_, __) => const SizedBox(height: 12),
                     itemBuilder: (context, index) {
                       final coin = favoriteCoins[index];
 
@@ -181,8 +201,7 @@ class _WatchlistScreenState extends State<WatchlistScreen> {
                                 coin.image,
                                 width: 42,
                                 height: 42,
-                                errorBuilder: (_, __, ___) =>
-                                    const Icon(
+                                errorBuilder: (_, __, ___) => const Icon(
                                   Icons.currency_bitcoin,
                                   color: AppColors.textSecondary,
                                   size: 40,
@@ -193,8 +212,7 @@ class _WatchlistScreenState extends State<WatchlistScreen> {
 
                               Expanded(
                                 child: Column(
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.start,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
                                       coin.name,
@@ -216,8 +234,7 @@ class _WatchlistScreenState extends State<WatchlistScreen> {
                               ),
 
                               Column(
-                                crossAxisAlignment:
-                                    CrossAxisAlignment.end,
+                                crossAxisAlignment: CrossAxisAlignment.end,
                                 children: [
                                   Text(
                                     formatPrice(coin.currentPrice),

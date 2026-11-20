@@ -1,4 +1,4 @@
-
+import 'package:dio/dio.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../domain/entities/coin.dart';
@@ -15,8 +15,7 @@ class MarketBloc extends Bloc<MarketEvent, MarketState> {
   MarketFilter _selectedFilter = MarketFilter.all;
   MarketSort _selectedSort = MarketSort.marketCapHighToLow;
 
-  MarketBloc({required this.getCoins})
-      : super(const MarketInitial()) {
+  MarketBloc({required this.getCoins}) : super(const MarketInitial()) {
     on<FetchCoinsEvent>(_onFetchCoins);
     on<RefreshCoinsEvent>(_onRefreshCoins);
     on<SearchCoinsEvent>(_onSearchCoins);
@@ -34,7 +33,7 @@ class MarketBloc extends Bloc<MarketEvent, MarketState> {
       _allCoins = await getCoins();
       _emitFilteredCoins(emit);
     } catch (e) {
-      emit(MarketError(e.toString()));
+      emit(MarketError(_getErrorMessage(e)));
     }
   }
 
@@ -46,14 +45,11 @@ class MarketBloc extends Bloc<MarketEvent, MarketState> {
       _allCoins = await getCoins();
       _emitFilteredCoins(emit);
     } catch (e) {
-      emit(MarketError(e.toString()));
+      emit(MarketError(_getErrorMessage(e)));
     }
   }
 
-  void _onSearchCoins(
-    SearchCoinsEvent event,
-    Emitter<MarketState> emit,
-  ) {
+  void _onSearchCoins(SearchCoinsEvent event, Emitter<MarketState> emit) {
     _searchQuery = event.query.trim();
     _emitFilteredCoins(emit);
   }
@@ -66,10 +62,7 @@ class MarketBloc extends Bloc<MarketEvent, MarketState> {
     _emitFilteredCoins(emit);
   }
 
-  void _onUpdateSort(
-    UpdateMarketSortEvent event,
-    Emitter<MarketState> emit,
-  ) {
+  void _onUpdateSort(UpdateMarketSortEvent event, Emitter<MarketState> emit) {
     _selectedSort = event.sort;
     _emitFilteredCoins(emit);
   }
@@ -81,12 +74,8 @@ class MarketBloc extends Bloc<MarketEvent, MarketState> {
     // 1. Search by coin name or symbol.
     if (_searchQuery.isNotEmpty) {
       filteredCoins = filteredCoins.where((coin) {
-        return coin.name.toLowerCase().contains(
-                  _searchQuery.toLowerCase(),
-                ) ||
-            coin.symbol.toLowerCase().contains(
-                  _searchQuery.toLowerCase(),
-                );
+        return coin.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+            coin.symbol.toLowerCase().contains(_searchQuery.toLowerCase());
       }).toList();
     }
 
@@ -111,34 +100,30 @@ class MarketBloc extends Bloc<MarketEvent, MarketState> {
     // 3. Apply sorting.
     switch (_selectedSort) {
       case MarketSort.marketCapHighToLow:
-        filteredCoins.sort(
-          (a, b) => b.marketCap.compareTo(a.marketCap),
-        );
+        filteredCoins.sort((a, b) => b.marketCap.compareTo(a.marketCap));
         break;
 
       case MarketSort.priceHighToLow:
-        filteredCoins.sort(
-          (a, b) => b.currentPrice.compareTo(a.currentPrice),
-        );
+        filteredCoins.sort((a, b) => b.currentPrice.compareTo(a.currentPrice));
         break;
 
       case MarketSort.priceLowToHigh:
-        filteredCoins.sort(
-          (a, b) => a.currentPrice.compareTo(b.currentPrice),
-        );
+        filteredCoins.sort((a, b) => a.currentPrice.compareTo(b.currentPrice));
         break;
 
       case MarketSort.changeHighToLow:
         filteredCoins.sort(
-          (a, b) => (b.priceChangePercentage24h ?? 0)
-              .compareTo(a.priceChangePercentage24h ?? 0),
+          (a, b) => (b.priceChangePercentage24h ?? 0).compareTo(
+            a.priceChangePercentage24h ?? 0,
+          ),
         );
         break;
 
       case MarketSort.changeLowToHigh:
         filteredCoins.sort(
-          (a, b) => (a.priceChangePercentage24h ?? 0)
-              .compareTo(b.priceChangePercentage24h ?? 0),
+          (a, b) => (a.priceChangePercentage24h ?? 0).compareTo(
+            b.priceChangePercentage24h ?? 0,
+          ),
         );
         break;
     }
@@ -162,5 +147,21 @@ class MarketBloc extends Bloc<MarketEvent, MarketState> {
         ),
       );
     }
+  }
+
+  String _getErrorMessage(Object error) {
+    if (error is DioException) {
+      switch (error.type) {
+        case DioExceptionType.connectionError:
+        case DioExceptionType.connectionTimeout:
+        case DioExceptionType.receiveTimeout:
+        case DioExceptionType.sendTimeout:
+          return 'Please check your internet connection and try again.';
+        default:
+          return 'Unable to load cryptocurrencies. Please try again.';
+      }
+    }
+
+    return 'Unable to load cryptocurrencies. Please try again.';
   }
 }

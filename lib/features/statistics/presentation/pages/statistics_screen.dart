@@ -1,4 +1,3 @@
-
 import 'package:coin_scope/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -88,10 +87,7 @@ class StatisticsView extends StatelessWidget {
             const SizedBox(height: 6),
             Text(
               subtitle,
-              style: const TextStyle(
-                color: AppColors.textMuted,
-                fontSize: 11,
-              ),
+              style: const TextStyle(color: AppColors.textMuted, fontSize: 11),
             ),
           ],
         ],
@@ -145,10 +141,7 @@ class StatisticsView extends StatelessWidget {
     );
   }
 
-  Widget _buildFearGreedCard({
-    required int value,
-    required String sentiment,
-  }) {
+  Widget _buildFearGreedCard({required int value, required String sentiment}) {
     final Color sentimentColor;
 
     switch (sentiment.toLowerCase()) {
@@ -180,17 +173,11 @@ class StatisticsView extends StatelessWidget {
         children: [
           const Row(
             children: [
-              Icon(
-                Icons.psychology_outlined,
-                color: AppColors.primary,
-              ),
+              Icon(Icons.psychology_outlined, color: AppColors.primary),
               SizedBox(width: 8),
               Text(
                 'Fear & Greed Index',
-                style: TextStyle(
-                  color: AppColors.textSecondary,
-                  fontSize: 14,
-                ),
+                style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
               ),
             ],
           ),
@@ -248,17 +235,11 @@ class StatisticsView extends StatelessWidget {
             children: [
               Text(
                 'Extreme Fear',
-                style: TextStyle(
-                  color: AppColors.textMuted,
-                  fontSize: 10,
-                ),
+                style: TextStyle(color: AppColors.textMuted, fontSize: 10),
               ),
               Text(
                 'Extreme Greed',
-                style: TextStyle(
-                  color: AppColors.textMuted,
-                  fontSize: 10,
-                ),
+                style: TextStyle(color: AppColors.textMuted, fontSize: 10),
               ),
             ],
           ),
@@ -380,10 +361,7 @@ class StatisticsView extends StatelessWidget {
         Text(
           'Last updated: ${DateFormat('dd MMM yyyy, hh:mm a').format(statistics.updatedAt.toLocal())}',
           textAlign: TextAlign.center,
-          style: const TextStyle(
-            color: AppColors.textMuted,
-            fontSize: 11,
-          ),
+          style: const TextStyle(color: AppColors.textMuted, fontSize: 11),
         ),
       ],
     );
@@ -400,8 +378,8 @@ class StatisticsView extends StatelessWidget {
           IconButton(
             onPressed: () {
               context.read<StatisticsBloc>().add(
-                    const RefreshStatisticsEvent(),
-                  );
+                const RefreshStatisticsEvent(),
+              );
             },
             icon: const Icon(Icons.refresh),
             tooltip: 'Refresh statistics',
@@ -410,12 +388,9 @@ class StatisticsView extends StatelessWidget {
       ),
       body: BlocBuilder<StatisticsBloc, StatisticsState>(
         builder: (context, state) {
-          if (state is StatisticsInitial ||
-              state is StatisticsLoading) {
+          if (state is StatisticsInitial || state is StatisticsLoading) {
             return const Center(
-              child: CircularProgressIndicator(
-                color: AppColors.primary,
-              ),
+              child: CircularProgressIndicator(color: AppColors.primary),
             );
           }
 
@@ -425,22 +400,15 @@ class StatisticsView extends StatelessWidget {
                 padding: const EdgeInsets.all(24),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     const Icon(
-                      Icons.error_outline,
+                      Icons.info_outlined,
                       color: AppColors.error,
                       size: 48,
                     ),
                     const SizedBox(height: 12),
-                    const Text(
-                      'Unable to load market statistics',
-                      style: TextStyle(
-                        color: AppColors.textPrimary,
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
+                    
                     Text(
                       state.message,
                       textAlign: TextAlign.center,
@@ -453,8 +421,8 @@ class StatisticsView extends StatelessWidget {
                     ElevatedButton(
                       onPressed: () {
                         context.read<StatisticsBloc>().add(
-                              const FetchStatisticsEvent(),
-                            );
+                          const FetchStatisticsEvent(),
+                        );
                       },
                       child: const Text('Try Again'),
                     ),
@@ -474,8 +442,7 @@ class StatisticsView extends StatelessWidget {
 
                 await bloc.stream.firstWhere(
                   (state) =>
-                      state is StatisticsLoaded ||
-                      state is StatisticsError,
+                      state is StatisticsLoaded || state is StatisticsError,
                 );
               },
               child: _buildStatisticsContent(state),
