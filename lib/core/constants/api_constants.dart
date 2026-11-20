@@ -17,4 +17,5 @@ class ApiEndpoints {
 
   // Global Market Statistics
   static const String global = '/global';
+  
 }

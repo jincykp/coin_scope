@@ -2,6 +2,7 @@
 import 'package:equatable/equatable.dart';
 
 import '../../domain/entities/coin.dart';
+import 'market_event.dart';
 
 abstract class MarketState extends Equatable {
   const MarketState();
@@ -21,14 +22,23 @@ class MarketLoading extends MarketState {
 class MarketLoaded extends MarketState {
   final List<Coin> coins;
   final String searchQuery;
+  final MarketFilter selectedFilter;
+  final MarketSort selectedSort;
 
   const MarketLoaded(
     this.coins, {
     this.searchQuery = '',
+    this.selectedFilter = MarketFilter.all,
+    this.selectedSort = MarketSort.marketCapHighToLow,
   });
 
   @override
-  List<Object?> get props => [coins, searchQuery];
+  List<Object?> get props => [
+        coins,
+        searchQuery,
+        selectedFilter,
+        selectedSort,
+      ];
 }
 
 class MarketError extends MarketState {
@@ -41,5 +51,20 @@ class MarketError extends MarketState {
 }
 
 class MarketEmpty extends MarketState {
-  const MarketEmpty();
+  final String searchQuery;
+  final MarketFilter selectedFilter;
+  final MarketSort selectedSort;
+
+  const MarketEmpty({
+    this.searchQuery = '',
+    this.selectedFilter = MarketFilter.all,
+    this.selectedSort = MarketSort.marketCapHighToLow,
+  });
+
+  @override
+  List<Object?> get props => [
+        searchQuery,
+        selectedFilter,
+        selectedSort,
+      ];
 }

@@ -11,11 +11,17 @@ class MarketBloc extends Bloc<MarketEvent, MarketState> {
 
   List<Coin> _allCoins = [];
 
+  String _searchQuery = '';
+  MarketFilter _selectedFilter = MarketFilter.all;
+  MarketSort _selectedSort = MarketSort.marketCapHighToLow;
+
   MarketBloc({required this.getCoins})
       : super(const MarketInitial()) {
     on<FetchCoinsEvent>(_onFetchCoins);
     on<RefreshCoinsEvent>(_onRefreshCoins);
     on<SearchCoinsEvent>(_onSearchCoins);
+    on<UpdateMarketFilterEvent>(_onUpdateFilter);
+    on<UpdateMarketSortEvent>(_onUpdateSort);
   }
 
   Future<void> _onFetchCoins(
@@ -26,12 +32,7 @@ class MarketBloc extends Bloc<MarketEvent, MarketState> {
 
     try {
       _allCoins = await getCoins();
-
-      if (_allCoins.isEmpty) {
-        emit(const MarketEmpty());
-      } else {
-        emit(MarketLoaded(_allCoins));
-      }
+      _emitFilteredCoins(emit);
     } catch (e) {
       emit(MarketError(e.toString()));
     }
@@ -43,12 +44,7 @@ class MarketBloc extends Bloc<MarketEvent, MarketState> {
   ) async {
     try {
       _allCoins = await getCoins();
-
-      if (_allCoins.isEmpty) {
-        emit(const MarketEmpty());
-      } else {
-        emit(MarketLoaded(_allCoins));
-      }
+      _emitFilteredCoins(emit);
     } catch (e) {
       emit(MarketError(e.toString()));
     }
@@ -58,20 +54,113 @@ class MarketBloc extends Bloc<MarketEvent, MarketState> {
     SearchCoinsEvent event,
     Emitter<MarketState> emit,
   ) {
-    final query = event.query.trim().toLowerCase();
+    _searchQuery = event.query.trim();
+    _emitFilteredCoins(emit);
+  }
 
-    final filteredCoins = _allCoins.where((coin) {
-      return coin.name.toLowerCase().contains(query) ||
-          coin.symbol.toLowerCase().contains(query);
-    }).toList();
+  void _onUpdateFilter(
+    UpdateMarketFilterEvent event,
+    Emitter<MarketState> emit,
+  ) {
+    _selectedFilter = event.filter;
+    _emitFilteredCoins(emit);
+  }
 
+  void _onUpdateSort(
+    UpdateMarketSortEvent event,
+    Emitter<MarketState> emit,
+  ) {
+    _selectedSort = event.sort;
+    _emitFilteredCoins(emit);
+  }
+
+  // Apply search, filter, and sorting together.
+  void _emitFilteredCoins(Emitter<MarketState> emit) {
+    List<Coin> filteredCoins = List.from(_allCoins);
+
+    // 1. Search by coin name or symbol.
+    if (_searchQuery.isNotEmpty) {
+      filteredCoins = filteredCoins.where((coin) {
+        return coin.name.toLowerCase().contains(
+                  _searchQuery.toLowerCase(),
+                ) ||
+            coin.symbol.toLowerCase().contains(
+                  _searchQuery.toLowerCase(),
+                );
+      }).toList();
+    }
+
+    // 2. Apply gainers or losers filter.
+    switch (_selectedFilter) {
+      case MarketFilter.all:
+        break;
+
+      case MarketFilter.gainers:
+        filteredCoins = filteredCoins.where((coin) {
+          return (coin.priceChangePercentage24h ?? 0) > 0;
+        }).toList();
+        break;
+
+      case MarketFilter.losers:
+        filteredCoins = filteredCoins.where((coin) {
+          return (coin.priceChangePercentage24h ?? 0) < 0;
+        }).toList();
+        break;
+    }
+
+    // 3. Apply sorting.
+    switch (_selectedSort) {
+      case MarketSort.marketCapHighToLow:
+        filteredCoins.sort(
+          (a, b) => b.marketCap.compareTo(a.marketCap),
+        );
+        break;
+
+      case MarketSort.priceHighToLow:
+        filteredCoins.sort(
+          (a, b) => b.currentPrice.compareTo(a.currentPrice),
+        );
+        break;
+
+      case MarketSort.priceLowToHigh:
+        filteredCoins.sort(
+          (a, b) => a.currentPrice.compareTo(b.currentPrice),
+        );
+        break;
+
+      case MarketSort.changeHighToLow:
+        filteredCoins.sort(
+          (a, b) => (b.priceChangePercentage24h ?? 0)
+              .compareTo(a.priceChangePercentage24h ?? 0),
+        );
+        break;
+
+      case MarketSort.changeLowToHigh:
+        filteredCoins.sort(
+          (a, b) => (a.priceChangePercentage24h ?? 0)
+              .compareTo(b.priceChangePercentage24h ?? 0),
+        );
+        break;
+    }
+
+    // 4. Emit the final result.
     if (filteredCoins.isEmpty) {
-      emit(const MarketEmpty());
+      emit(
+        MarketEmpty(
+          searchQuery: _searchQuery,
+          selectedFilter: _selectedFilter,
+          selectedSort: _selectedSort,
+        ),
+      );
     } else {
-      emit(MarketLoaded(
-        filteredCoins,
-        searchQuery: event.query,
-      ));
+      emit(
+        MarketLoaded(
+          filteredCoins,
+          searchQuery: _searchQuery,
+          selectedFilter: _selectedFilter,
+          selectedSort: _selectedSort,
+        ),
+      );
     }
   }
 }

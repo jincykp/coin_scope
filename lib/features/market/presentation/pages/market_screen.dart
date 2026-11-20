@@ -67,6 +67,322 @@ class _MarketViewState extends State<MarketView> {
     context.read<MarketBloc>().add(SearchCoinsEvent(query));
   }
 
+  // Open filter and sorting bottom sheet.
+  void _showFilterSortBottomSheet() {
+    final marketBloc = context.read<MarketBloc>();
+
+    final currentState = marketBloc.state;
+
+    MarketFilter selectedFilter = MarketFilter.all;
+    MarketSort selectedSort = MarketSort.marketCapHighToLow;
+
+    if (currentState is MarketLoaded) {
+      selectedFilter = currentState.selectedFilter;
+      selectedSort = currentState.selectedSort;
+    } else if (currentState is MarketEmpty) {
+      selectedFilter = currentState.selectedFilter;
+      selectedSort = currentState.selectedSort;
+    }
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppColors.cardBackground,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (sheetContext) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Bottom sheet heading
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            'Filter & Sort',
+                            style: TextStyle(
+                              color: AppColors.textPrimary,
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          IconButton(
+                            onPressed: () {
+                              Navigator.pop(sheetContext);
+                            },
+                            icon: const Icon(
+                              Icons.close,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      const SizedBox(height: 16),
+
+                      // Filter section
+                      const Text(
+                        'FILTER BY',
+                        style: TextStyle(
+                          color: AppColors.textSecondary,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1,
+                        ),
+                      ),
+
+                      const SizedBox(height: 8),
+
+                      _buildFilterOption(
+                        title: 'All Coins',
+                        value: MarketFilter.all,
+                        groupValue: selectedFilter,
+                        onChanged: (value) {
+                          setModalState(() {
+                            selectedFilter = value;
+                          });
+                        },
+                      ),
+
+                      _buildFilterOption(
+                        title: 'Gainers',
+                        subtitle: 'Coins with positive 24h change',
+                        value: MarketFilter.gainers,
+                        groupValue: selectedFilter,
+                        onChanged: (value) {
+                          setModalState(() {
+                            selectedFilter = value;
+                          });
+                        },
+                      ),
+
+                      _buildFilterOption(
+                        title: 'Losers',
+                        subtitle: 'Coins with negative 24h change',
+                        value: MarketFilter.losers,
+                        groupValue: selectedFilter,
+                        onChanged: (value) {
+                          setModalState(() {
+                            selectedFilter = value;
+                          });
+                        },
+                      ),
+
+                      const Divider(color: AppColors.divider, height: 28),
+
+                      // Sorting section
+                      const Text(
+                        'SORT BY',
+                        style: TextStyle(
+                          color: AppColors.textSecondary,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1,
+                        ),
+                      ),
+
+                      const SizedBox(height: 8),
+
+                      _buildSortOption(
+                        title: 'Market Cap: High to Low',
+                        value: MarketSort.marketCapHighToLow,
+                        groupValue: selectedSort,
+                        onChanged: (value) {
+                          setModalState(() {
+                            selectedSort = value;
+                          });
+                        },
+                      ),
+
+                      _buildSortOption(
+                        title: 'Price: High to Low',
+                        value: MarketSort.priceHighToLow,
+                        groupValue: selectedSort,
+                        onChanged: (value) {
+                          setModalState(() {
+                            selectedSort = value;
+                          });
+                        },
+                      ),
+
+                      _buildSortOption(
+                        title: 'Price: Low to High',
+                        value: MarketSort.priceLowToHigh,
+                        groupValue: selectedSort,
+                        onChanged: (value) {
+                          setModalState(() {
+                            selectedSort = value;
+                          });
+                        },
+                      ),
+
+                      _buildSortOption(
+                        title: '24h Change: High to Low',
+                        value: MarketSort.changeHighToLow,
+                        groupValue: selectedSort,
+                        onChanged: (value) {
+                          setModalState(() {
+                            selectedSort = value;
+                          });
+                        },
+                      ),
+
+                      _buildSortOption(
+                        title: '24h Change: Low to High',
+                        value: MarketSort.changeLowToHigh,
+                        groupValue: selectedSort,
+                        onChanged: (value) {
+                          setModalState(() {
+                            selectedSort = value;
+                          });
+                        },
+                      ),
+
+                      const SizedBox(height: 20),
+
+                      // Apply and Reset buttons
+                      Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton(
+                              onPressed: () {
+                                setModalState(() {
+                                  selectedFilter = MarketFilter.all;
+                                  selectedSort = MarketSort.marketCapHighToLow;
+                                });
+                              },
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: AppColors.textPrimary,
+                                side: const BorderSide(
+                                  color: AppColors.divider,
+                                ),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 14,
+                                ),
+                              ),
+                              child: const Text('Reset'),
+                            ),
+                          ),
+
+                          const SizedBox(width: 12),
+
+                          Expanded(
+                            child: ElevatedButton(
+                              // onPressed: () {
+                              //   // context.read<MarketBloc>().add(
+                              //   //   UpdateMarketFilterEvent(selectedFilter),
+                              //   // );
+                              //   marketBloc.add(
+                              //     UpdateMarketFilterEvent(selectedFilter),
+                              //   );
+                              //   marketBloc.add(
+                              //     UpdateMarketSortEvent(selectedSort),
+                              //   );
+
+                              //   Navigator.pop(bottomSheetContext);
+                              //   context.read<MarketBloc>().add(
+                              //     UpdateMarketSortEvent(selectedSort),
+                              //   );
+
+                              //   Navigator.pop(sheetContext);
+                              // },
+                              onPressed: () {
+                                marketBloc.add(
+                                  UpdateMarketFilterEvent(selectedFilter),
+                                );
+                                marketBloc.add(
+                                  UpdateMarketSortEvent(selectedSort),
+                                );
+
+                                Navigator.pop(sheetContext);
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.primary,
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 14,
+                                ),
+                              ),
+                              child: const Text('Apply'),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  // Filter radio option.
+  Widget _buildFilterOption({
+    required String title,
+    String? subtitle,
+    required MarketFilter value,
+    required MarketFilter groupValue,
+    required ValueChanged<MarketFilter> onChanged,
+  }) {
+    return RadioListTile<MarketFilter>(
+      value: value,
+      groupValue: groupValue,
+      onChanged: (value) {
+        if (value != null) {
+          onChanged(value);
+        }
+      },
+      title: Text(
+        title,
+        style: const TextStyle(color: AppColors.textPrimary, fontSize: 14),
+      ),
+      subtitle: subtitle != null
+          ? Text(
+              subtitle,
+              style: const TextStyle(color: AppColors.textMuted, fontSize: 11),
+            )
+          : null,
+      activeColor: AppColors.primary,
+      contentPadding: EdgeInsets.zero,
+      dense: true,
+    );
+  }
+
+  // Sorting radio option.
+  Widget _buildSortOption({
+    required String title,
+    required MarketSort value,
+    required MarketSort groupValue,
+    required ValueChanged<MarketSort> onChanged,
+  }) {
+    return RadioListTile<MarketSort>(
+      value: value,
+      groupValue: groupValue,
+      onChanged: (value) {
+        if (value != null) {
+          onChanged(value);
+        }
+      },
+      title: Text(
+        title,
+        style: const TextStyle(color: AppColors.textPrimary, fontSize: 14),
+      ),
+      activeColor: AppColors.primary,
+      contentPadding: EdgeInsets.zero,
+      dense: true,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -78,6 +394,7 @@ class _MarketViewState extends State<MarketView> {
           IconButton(
             onPressed: () {
               _searchController.clear();
+              setState(() {});
               _searchCoins('');
               context.read<MarketBloc>().add(const RefreshCoinsEvent());
             },
@@ -87,58 +404,79 @@ class _MarketViewState extends State<MarketView> {
       ),
       body: Column(
         children: [
-          // Search Field
+          // Search field and filter button
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-            child: TextField(
-              controller: _searchController,
-              // onChanged: _searchCoins,
-              onChanged: (value) {
-                setState(() {});
-                _searchCoins(value);
-              },
-              style: const TextStyle(color: AppColors.textPrimary),
-              decoration: InputDecoration(
-                hintText: 'Search coins by name or symbol',
-                hintStyle: const TextStyle(
-                  color: AppColors.textMuted,
-                  fontSize: 14,
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _searchController,
+                    onChanged: (value) {
+                      setState(() {});
+                      _searchCoins(value);
+                    },
+                    style: const TextStyle(color: AppColors.textPrimary),
+                    decoration: InputDecoration(
+                      hintText: 'Search coins by name or symbol',
+                      hintStyle: const TextStyle(
+                        color: AppColors.textMuted,
+                        fontSize: 14,
+                      ),
+                      prefixIcon: const Icon(
+                        Icons.search,
+                        color: AppColors.textSecondary,
+                      ),
+                      suffixIcon: _searchController.text.isNotEmpty
+                          ? IconButton(
+                              onPressed: () {
+                                _searchController.clear();
+                                setState(() {});
+                                _searchCoins('');
+                              },
+                              icon: const Icon(
+                                Icons.close,
+                                color: AppColors.textSecondary,
+                              ),
+                            )
+                          : null,
+                      filled: true,
+                      fillColor: AppColors.cardBackground,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(color: AppColors.primary),
+                      ),
+                    ),
+                  ),
                 ),
-                prefixIcon: const Icon(
-                  Icons.search,
-                  color: AppColors.textSecondary,
+
+                const SizedBox(width: 10),
+
+                // Filter and sort button
+                Container(
+                  decoration: BoxDecoration(
+                    color: AppColors.cardBackground,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: IconButton(
+                    onPressed: _showFilterSortBottomSheet,
+                    icon: const Icon(Icons.tune, color: AppColors.primary),
+                    tooltip: 'Filter and Sort',
+                  ),
                 ),
-                suffixIcon: _searchController.text.isNotEmpty
-                    ? IconButton(
-                        onPressed: () {
-                          _searchController.clear();
-                          _searchCoins('');
-                        },
-                        icon: const Icon(
-                          Icons.close,
-                          color: AppColors.textSecondary,
-                        ),
-                      )
-                    : null,
-                filled: true,
-                fillColor: AppColors.cardBackground,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide.none,
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide.none,
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: AppColors.primary),
-                ),
-              ),
+              ],
             ),
           ),
 
-          // Coin List
+          // Coin list
           Expanded(
             child: BlocBuilder<MarketBloc, MarketState>(
               builder: (context, state) {
@@ -183,9 +521,9 @@ class _MarketViewState extends State<MarketView> {
                 if (state is MarketEmpty) {
                   return Center(
                     child: Text(
-                      _searchController.text.isNotEmpty
+                      state.searchQuery.isNotEmpty
                           ? 'No coins found'
-                          : 'No coins available',
+                          : 'No coins match the selected filter',
                       style: const TextStyle(color: AppColors.textSecondary),
                     ),
                   );
@@ -194,7 +532,7 @@ class _MarketViewState extends State<MarketView> {
                 if (state is MarketLoaded) {
                   return RefreshIndicator(
                     onRefresh: () async {
-                      context.read<MarketBloc>().add(const RefreshCoinsEvent());
+                      await context.read<MarketBloc>().getCoins;
                     },
                     child: ListView.separated(
                       padding: const EdgeInsets.all(16),
@@ -236,6 +574,7 @@ class _MarketViewState extends State<MarketView> {
                                     );
                                   },
                                 ),
+
                                 const SizedBox(width: 12),
 
                                 Expanded(
@@ -294,36 +633,34 @@ class _MarketViewState extends State<MarketView> {
                                         fontWeight: FontWeight.w600,
                                       ),
                                     ),
-                                    const SizedBox(width: 8),
+                                  ],
+                                ),
 
-                                    const SizedBox(width: 4),
+                                // Favourite button
+                                BlocBuilder<WatchlistBloc, WatchlistState>(
+                                  builder: (context, watchlistState) {
+                                    final isFavorite =
+                                        watchlistState is WatchlistLoaded &&
+                                        watchlistState.favoriteIds.contains(
+                                          coin.id,
+                                        );
 
-                                    BlocBuilder<WatchlistBloc, WatchlistState>(
-                                      builder: (context, watchlistState) {
-                                        final isFavorite =
-                                            watchlistState is WatchlistLoaded &&
-                                            watchlistState.favoriteIds.contains(
-                                              coin.id,
-                                            );
-
-                                        return IconButton(
-                                          onPressed: () {
-                                            context.read<WatchlistBloc>().add(
-                                              ToggleWatchlistEvent(coin.id),
-                                            );
-                                          },
-                                          icon: Icon(
-                                            isFavorite
-                                                ? Icons.favorite
-                                                : Icons.favorite_border,
-                                            color: isFavorite
-                                                ? AppColors.error
-                                                : AppColors.textSecondary,
-                                          ),
+                                    return IconButton(
+                                      onPressed: () {
+                                        context.read<WatchlistBloc>().add(
+                                          ToggleWatchlistEvent(coin.id),
                                         );
                                       },
-                                    ),
-                                  ],
+                                      icon: Icon(
+                                        isFavorite
+                                            ? Icons.favorite
+                                            : Icons.favorite_border,
+                                        color: isFavorite
+                                            ? AppColors.error
+                                            : AppColors.textSecondary,
+                                      ),
+                                    );
+                                  },
                                 ),
                               ],
                             ),
