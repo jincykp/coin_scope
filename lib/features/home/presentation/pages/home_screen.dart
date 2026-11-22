@@ -1,11 +1,10 @@
-
+import 'package:coin_scope/features/settings/presentation/pages/settings_screen.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../market/presentation/pages/market_screen.dart';
 import '../../../watchlist/presentation/pages/watchlist_screen.dart';
 import '../../../statistics/presentation/pages/statistics_screen.dart';
-import '../../../profile/presentation/pages/profile_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -21,16 +20,13 @@ class _HomeScreenState extends State<HomeScreen> {
     MarketScreen(),
     WatchlistScreen(),
     StatisticsScreen(),
-    ProfileScreen(),
+    SettingsScreen(),
   ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: IndexedStack(
-        index: _selectedIndex,
-        children: _screens,
-      ),
+      body: IndexedStack(index: _selectedIndex, children: _screens),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
         onTap: (index) {
@@ -57,7 +53,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.person_outline),
-            label: 'Profile',
+            label: 'Settings',
           ),
         ],
       ),
